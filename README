@@ -1,0 +1,5 @@
+perf_event_open syscall example for both counting and sampling.
+
+It is possible to inspect how perf tool sets its perf_event_attr structure by
+running the perf command with the -vv flag e.g.
+  perf [stat|record] -vv -a -e instructions
