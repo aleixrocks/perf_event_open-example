@@ -62,11 +62,12 @@ static print_perf_macros()
 #ifdef PERF_RECORD_SWITCH_CPU_WIDE
 	printf(" - PERF_RECORD_SWITCH_CPU_WIDE: %d\n", PERF_RECORD_SWITCH_CPU_WIDE);
 #endif
+	printf("\n");
 }
 
 void print_sampling_info(struct perf_event_mmap_page *samp_info)
 {
-	printf("perf_event_mmap-page:\n");
+	printf("perf_event_mmap-page (not complete):\n");
 	printf("  - version: %u\n", samp_info->version);
 	printf("  - compat version: %u\n", samp_info->compat_version);
 	printf("  - index: %u\n", samp_info->index);
@@ -78,6 +79,7 @@ void print_sampling_info(struct perf_event_mmap_page *samp_info)
 	printf("  - pmc_width: %x\n", samp_info->pmc_width);
 	printf("  - data_head: %lld\n", samp_info->data_head);
 	printf("  - data_tail: %lld\n", samp_info->data_tail);
+	printf("\n");
 }
 
 void compute_stuff()
@@ -96,6 +98,7 @@ void compute_stuff()
 		sum += buf[i];
 	}
 
+	// this is to avoid compiler optimizations
 	printf("sum: %d\n", sum);
 }
 
@@ -175,7 +178,6 @@ int perf_sampling_example()
 	ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
 
 	print_sampling_info(samp_info);
-	printf("\n");
 
 	samples_end = buffer + PAGE_SIZE + samp_info->data_head;
 	//TODO memory barrier rmb
@@ -208,16 +210,15 @@ int perf_counting_example()
 	int i;
 	int fd;
 	int sum;
-	char *buf;
 	long long count;
 	struct perf_event_attr pe;
-	//const size_t buf_size = 1024*1024;
-	const size_t buf_size = 1024*1024*1024;
 
 	memset(&pe, 0, sizeof(struct perf_event_attr));
-	pe.type = UNCORE_IMC_TYPE;
-	pe.size = sizeof(struct perf_event_attr);
-	pe.config = UNCORE_IMC_EVENT_READ;
+	//pe.type     = UNCORE_IMC_TYPE;
+	//pe.config   = UNCORE_IMC_EVENT_READ;
+	pe.type        = PERF_TYPE_HARDWARE;
+	pe.config      = PERF_COUNT_HW_INSTRUCTIONS;
+	pe.size     = sizeof(struct perf_event_attr);
 	pe.disabled = 1;
 
 	fd = perf_event_open(&pe, -1, 0, -1, 0);
@@ -227,25 +228,15 @@ int perf_counting_example()
 		exit(EXIT_FAILURE);
 	}
 
-	buf = (char *)malloc(buf_size);
-	if (!buf) {
-		perror("Cannot mmap memory");
-		exit(EXIT_FAILURE);
-	}
 	ioctl(fd, PERF_EVENT_IOC_RESET, 0);
 	ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
 
-	for (i = 0; i < buf_size; i++) {
-		sum += buf[i];
-	}
+	compute_stuff();
 
 	ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
 	read(fd, &count, sizeof(long long));
 
-	printf("Used %lld data reads (%.3f MiB %.3f GiB)\n", count,
-		((float)count*64)/(1024*1024),
-		((float)count*64)/(1024*1024*1024));
-	printf("sum: %d\n", sum);
+	printf("total instructions: %llu\n", count);
 
 	close(fd);
 
@@ -255,9 +246,8 @@ int perf_counting_example()
 int main(int argc, char **argv)
 {
 	print_perf_macros();
-	printf("\n");
 
-	printf("################\n");
+	printf("\n################\n");
 	printf("sampling example\n");
 	printf("################\n\n");
 	perf_sampling_example();
