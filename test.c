@@ -189,7 +189,7 @@ int perf_sampling_example()
 
 		print_header(header);
 		value = (uint64_t *)post_header;
-		printf(" - value: %"PRIu64"\n", *value);
+		printf("   {value: %"PRIu64"}\n", *value);
 
 		iter += header->size;
 		nrecords++;
@@ -216,8 +216,8 @@ int perf_counting_example()
 	memset(&pe, 0, sizeof(struct perf_event_attr));
 	//pe.type     = UNCORE_IMC_TYPE;
 	//pe.config   = UNCORE_IMC_EVENT_READ;
-	pe.type        = PERF_TYPE_HARDWARE;
-	pe.config      = PERF_COUNT_HW_INSTRUCTIONS;
+	pe.type     = PERF_TYPE_HARDWARE;
+	pe.config   = PERF_COUNT_HW_INSTRUCTIONS;
 	pe.size     = sizeof(struct perf_event_attr);
 	pe.disabled = 1;
 
