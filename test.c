@@ -257,6 +257,13 @@ int main(int argc, char **argv)
 	print_perf_macros();
 	printf("\n");
 
+	printf("################\n");
+	printf("sampling example\n");
+	printf("################\n\n");
 	perf_sampling_example();
-	//perf_counting_example();
+
+	printf("\n################\n");
+	printf("counting example\n");
+	printf("################\n\n");
+	perf_counting_example();
 }
